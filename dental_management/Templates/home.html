@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DentalApp</title>
+    <!-- Bootstrap CSS -->
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: #f8f9fa;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh; /* Ensures the footer stays at the bottom */
+            margin: 0;
+        }
+        .navbar {
+    height: 100vh;
+    width: 250px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    background-color: #ffffff;
+    border-right: 1px solid #dee2e6;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Align content to the top */
+    align-items: center;
+    padding-top: 1rem; /* Adjust padding to move the brand down slightly */
+}
+
+.navbar-brand {
+    font-weight: bold;
+    font-size: 1.8rem;
+    margin-bottom: 2rem;
+    text-align: center; /* Align text to the left */
+    width: 100%; /* Make sure the text takes full width */
+    padding-left: 1rem; /* Add some left padding for better appearance */
+}
+
+        .nav-link {
+            font-size: 1.1rem;
+            padding: 0.75rem 1.25rem;
+            display: block;
+            text-align: center;
+            border-radius: 0.25rem;
+            margin: 0.5rem 0;
+            color: #495057;
+            text-decoration: none;
+        }
+        .nav-link:hover {
+            background-color: #e9ecef;
+            color: #007bff;
+        }
+        .navbar-light .navbar-nav .nav-link.active {
+            background-color: #007bff;
+            color: #ffffff;
+        }
+        .content-wrapper {
+            background-image: url('https://img.freepik.com/premium-photo/dental-tools-model-teeth-displayed-light-blue-background_1193327-3382.jpg'); 
+            background-size: cover; 
+            background-repeat: no-repeat; 
+            /* background-position: center center;  */
+            /* background-attachment: fixed; */
+            flex: 1;
+            margin-left: 250px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            text-align: center; /* Center align the content */
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: #4675a8;
+            
+        }
+        p {
+            font-size: 1.25rem;
+            color: #6c757d;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 1rem 0;
+            text-align: center;
+            margin-top: auto; /* Pushes the footer to the bottom */
+            width: 100%;
+        }
+        .logout-button {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            background-color: #dc3545;
+            border: none;
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+        .logout-button:hover {
+            background-color: #c82333;
+            box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-light bg-light shadow-sm">
+        <a class="navbar-brand" href="{% url 'home' %}">DentalApp</a>
+        <div class="navbar-nav">
+            {% if user.is_authenticated %}
+                <a class="nav-link btn btn-secondary" href="{% url 'clinic' %}">Clinics</a>
+                <a class="nav-link btn btn-secondary" href="{% url 'patients' %}">Patients</a>
+                <a class="nav-link btn btn-secondary" href="{% url 'doctor' %}">Doctors</a>
+            {% else %}
+                <a class="nav-link btn btn-primary" href="{% url 'login' %}">Login</a>
+                <a class="nav-link btn btn-primary" href="{% url 'signup' %}">Signup</a>
+            {% endif %}
+        </div>
+    </nav>
+
+    {% if user.is_authenticated %}
+        <a class="btn logout-button" href="{% url 'logout' %}">Logout</a>
+    {% endif %}
+
+    <div class="content-wrapper">
+        <div>
+            <h1>Welcome to DentalApp</h1>
+            <p>Although dentistry is our profession, people are our main priority.</p>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 DentalApp. All rights reserved.</p>
+    </footer>
+
+    <!-- Bootstrap Bundle with Popper -->
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/5.3.0/js/bootstrap.bundle.min.js" integrity="sha384-tjAtGzzYBGTBfK/YwzVOYH8HJjkWl4Xr1fYy4zM4e4s4fJ6b4S69k7b1F1ph9ka" crossorigin="anonymous"></script>
+</body>
+</html>

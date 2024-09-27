@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manage Clinics</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <style>
+        body {
+            padding-top: 56px;
+            background-color: #f8f9fa;
+        }
+        .sidebar {
+            height: 100vh;
+            width: 250px;
+            position: fixed;
+            top: 0;
+            left: 0;
+            background-color: #ffffff;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            z-index: 1000;
+        }
+        .sidebar-brand {
+            font-weight: bold;
+            font-size: 1.5rem;
+            padding: 1rem;
+            text-align: center;
+        }
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+        }
+        .sidebar-nav .nav-link {
+            font-size: 1.1rem;
+            padding: 0.75rem 1.25rem;
+            display: block;
+            text-align: center;
+            border-radius: 0.25rem;
+            margin: 0.25rem 0;
+            color: #495057;
+            text-decoration: none;
+        }
+        .sidebar-nav .nav-link:hover {
+            background-color: #e9ecef;
+            color: #007bff;
+        }
+        .main-content {
+            margin-left: 250px; /* Sidebar width */
+            padding: 20px;
+        }
+        .footer {
+            background-color: #f8f9fa;
+            padding: 1rem 0;
+            text-align: center;
+            margin-top: 2rem;
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1050;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0, 0, 0, 0.4);
+            justify-content: center; /* Center the modal horizontally */
+            align-items: center; /* Center the modal vertically */
+        }
+        .modal-content {
+            background-color: #fff;
+            margin: auto;
+            padding: 20px;
+            border: 1px solid #888;
+            width: 80%; /* Set a max-width for the modal */
+            max-width: 600px; /* Limit the width of the modal */
+            border-radius: 0.5rem; /* Rounded corners */
+        }
+        .logout-button {
+            background-color: #007bff; /* Blue color */
+            color: white;
+            position: absolute;
+            right: 20px; /* Align to the right */
+            top: 20px; /* Align with navbar */
+            padding: 10px 20px;
+            border: none;
+            border-radius: 0.25rem;
+            text-decoration: none;
+        }
+        .logout-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+        }
+        #add-clinic-btn {
+            background-color: #28a745; /* Green color */
+            color: white;
+        }
+        #add-clinic-btn:hover {
+            background-color: #218838; /* Darker green on hover */
+        }
+    </style>
+</head>
+<body>
+    <!-- Navbar -->
+    <nav class="sidebar">
+        <div class="sidebar-brand">
+            <a class="nav-link" href="{% url 'home' %}">DentalApp</a>
+        </div>
+        <ul class="sidebar-nav">
+            {% if user.is_authenticated %}
+                <li><a class="nav-link" href="{% url 'clinic' %}">Clinics</a></li>
+                <li><a class="nav-link" href="{% url 'patients' %}">Patients</a></li>
+                <li><a class="nav-link" href="{% url 'doctor' %}">Doctors</a></li>
+            {% else %}
+                <li><a class="nav-link" href="{% url 'login' %}">Login</a></li>
+                <li><a class="nav-link" href="{% url 'signup' %}">Signup</a></li>
+            {% endif %}
+        </ul>
+    </nav>
+    
+    <a class="btn logout-button" href="{% url 'logout' %}">Logout</a>
+
+    <!-- Main Content -->
+    <div class="main-content">
+        <div class="container py-5">
+            <h1 class="text-center mb-4">Manage Clinics</h1>
+            <button id="add-clinic-btn" class="btn mb-5">
+                <i class="fas fa-plus"></i> Add New Clinic
+            </button>
+
+            <table class="table table-striped table-bordered">
+                <thead class="table-light">
+                    <tr>
+                        <th>Name</th>
+                        <th>Phone</th>
+                        <th>Email</th>
+                        <th>Address</th>
+                        <th>City</th>
+                        <th>State</th>
+                        <th>Doctors</th>
+                        <th>Patients</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody id="clinics-table">
+                    <!-- Dynamically added rows here -->
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Add/Edit Clinic Modal -->
+    <div id="clinic-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Add/Edit Clinic</h5>
+                <button id="close-modal" class="btn-close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="clinic-form">
+                    {% csrf_token %}
+                    <input type="hidden" id="clinic-id" name="id" value="">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Name</label>
+                        <input type="text" id="name" class="form-control" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone" class="form-label">Phone</label>
+                        <input type="text" id="phone" class="form-control" name="phone" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email" class="form-label">Email</label>
+                        <input type="email" id="email" class="form-control" name="email" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="address" class="form-label">Address</label>
+                        <input type="text" id="address" class="form-control" name="address" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="city" class="form-label">City</label>
+                        <input type="text" id="city" class="form-control" name="city" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="state" class="form-label">State</label>
+                        <input type="text" id="state" class="form-control" name="state" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="doctors" class="form-label">Assign Doctors</label>
+                        <select multiple id="doctors" class="form-select" name="doctors">
+                            <!-- Dynamically populated doctor options -->
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="patients" class="form-label">Assign Patients</label>
+                        <select multiple id="patients" class="form-select" name="patients">
+                            <!-- Dynamically populated patient options -->
+                        </select>
+                    </div>
+                    <div class="d-flex justify-content-end">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Save
+                        </button>
+                        <button type="button" id="cancel-btn" class="btn btn-secondary ms-2">Cancel</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>&copy; 2024 DentalApp. All rights reserved.</p>
+    </footer>
+
+<script>
+    const apiUrl = "{% url 'clinic-list' %}";
+    const doctorsUrl = "{% url 'doctor-list' %}";
+    const patientsUrl = "{% url 'patient-list' %}";
+
+    $(document).ready(function () {
+        function fetchClinics() {
+            $.get(apiUrl, function (data) {
+                let rows = '';
+                data.forEach(clinic => {
+                    rows += `
+                    <tr>
+                        <td>${clinic.name}</td>
+                        <td>${clinic.phone}</td>
+                        <td>${clinic.email}</td>
+                        <td>${clinic.address}</td>
+                        <td>${clinic.city}</td>
+                        <td>${clinic.state}</td>
+                        <td>${clinic.doctors.length}</td>
+                        <td>${clinic.patients.length}</td>
+                        <td>
+                            <button class="btn btn-warning edit-clinic" data-id="${clinic.id}">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="btn btn-danger delete-clinic" data-id="${clinic.id}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    `;
+                });
+                $('#clinics-table').html(rows);
+            });
+        }
+
+        // Fetch clinics on page load
+        fetchClinics();
+
+        $('#add-clinic-btn').click(function () {
+            $('#clinic-modal').show();
+            $('#clinic-id').val('');
+            $('#clinic-form')[0].reset();
+            populateDoctorsAndPatients();
+        });
+
+        $(document).on('click', '.edit-clinic', function () {
+            const clinicId = $(this).data('id');
+            $.get(`${apiUrl}${clinicId}/`, function (clinic) {
+                $('#clinic-id').val(clinic.id);
+                $('#name').val(clinic.name);
+                $('#phone').val(clinic.phone);
+                $('#email').val(clinic.email);
+                $('#address').val(clinic.address);
+                $('#city').val(clinic.city);
+                $('#state').val(clinic.state);
+                $('#clinic-modal').show();
+                populateDoctorsAndPatients(clinic.doctors);
+            });
+        });
+
+        $(document).on('click', '.delete-clinic', function () {
+            const clinicId = $(this).data('id');
+            if (confirm('Are you sure you want to delete this clinic?')) {
+                $.ajax({
+                    url: `${apiUrl}${clinicId}/`,
+                    type: 'DELETE',
+                    headers: {
+                        "X-CSRFToken": getCookie('csrftoken')
+                    },
+                    success: function () {
+                        fetchClinics();
+                    }
+                });
+            }
+        });
+
+        $('#clinic-form').submit(function (event) {
+            event.preventDefault();
+            const clinicData = $(this).serialize();
+            const clinicId = $('#clinic-id').val();
+            const method = clinicId ? 'PUT' : 'POST';
+            const url = clinicId ? `${apiUrl}${clinicId}/` : apiUrl;
+
+            $.ajax({
+                url: url,
+                type: method,
+                data: clinicData,
+                headers: {
+                    "X-CSRFToken": getCookie('csrftoken') // Include CSRF token
+                },
+                success: function () {
+                    fetchClinics();
+                    $('#clinic-modal').hide();
+                },
+                error: function (xhr) {
+                    if (xhr.status === 403) {
+                        alert('You are not allowed to perform this action.');
+                    } else {
+                        alert('An error occurred. Please try again.');
+                    }
+                }
+            });
+        });
+
+        $('#close-modal, #cancel-btn').click(function () {
+            $('#clinic-modal').hide();
+        });
+
+        function populateDoctorsAndPatients(selectedDoctors = [], selectedPatients = []) {
+            // Populate doctors
+            $.get(doctorsUrl, function (doctors) {
+                const doctorOptions = doctors.map(doctor => `
+                    <option value="${doctor.id}" ${selectedDoctors.includes(doctor.id) ? 'selected' : ''}>
+                        ${doctor.name}
+                    </option>
+                `).join('');
+                $('#doctors').html(doctorOptions);
+            });
+
+            // Populate patients
+            $.get(patientsUrl, function (patients) {
+                const patientOptions = patients.map(patient => `
+                    <option value="${patient.id}" ${selectedPatients.includes(patient.id) ? 'selected' : ''}>
+                        ${patient.name}
+                    </option>
+                `).join('');
+                $('#patients').html(patientOptions);
+            });
+        }
+
+        // Function to get CSRF token
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let i = 0; i < cookies.length; i++) {
+                    const cookie = cookies[i].trim();
+                    if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
+        }
+    });
+</script>
+</body>
+</html>

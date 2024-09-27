@@ -1,0 +1,196 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Patient Details</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        h1 {
+            color: #333;
+        }
+        label {
+            font-size: 1.2em;
+        }
+        select {
+            width: 200px;
+            padding: 10px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+        #patientDetails {
+            margin-top: 20px;
+            background-color: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+        #patientDetails h2 {
+            margin-top: 0;
+            font-size: 1.8em; /* Increased font size for patient details heading */
+        }
+        #patientDetails p {
+            font-size: 1.1em;
+            font-weight: bold; /* Made patient name bold */
+        }
+        #patientName {
+            font-size: 1.5em; /* Increased font size for patient name */
+        }
+        .compartment {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #f9f9f9;
+            border-radius: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+        }
+        th, td {
+            padding: 10px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        #returnButton {
+            margin-top: 20px;
+            padding: 10px 15px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        #returnButton:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+
+    <h1>Patient Details</h1>
+
+    <div>
+        <label for="patientsDropdown">Select Patient:</label>
+        <select id="patientsDropdown">
+            <option value="" disabled selected>Select a patient</option>
+            {% for p in patient %}
+                <option value="{{ p.id }}">{{ p.name }}</option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div id="patientDetails">
+        <h2>Patient Details</h2>
+        <p><strong>Name:</strong> <span id="patientName"></span></p>
+        
+        <div class="compartment">
+            <h3>Visits:</h3>
+            <table id="visitsTable">
+                <thead>
+                    <tr>
+                        <th>Visit Date & Time</th>
+                        <th>Doctor</th>
+                        <th>Clinic</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="3">No visits found</td></tr>
+                </tbody>
+            </table>
+        </div>
+        
+        <div class="compartment">
+            <h3>Appointments:</h3>
+            <table id="appointmentsTable">
+                <thead>
+                    <tr>
+                        <th>Appointment Date & Time</th>
+                        <th>Doctor</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td colspan="3">No appointments found</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <button id="returnButton" onclick="returnToPatientPage()">Return to Patient Page</button>
+
+    <script>
+        $(document).ready(function () {
+            $('#patientsDropdown').change(function () {
+                const selectedPatientId = $(this).val();
+                console.log(`Selected Patient ID: ${selectedPatientId}`);
+    
+                // Fetch selected patient details using AJAX
+                $.ajax({
+                    url: `/api/patients/patientsor/${selectedPatientId}/`, // Updated URL
+                    method: 'GET',
+                    success: function (patient) {
+                        console.log(patient); // Log the patient data
+
+                        // Update patient name
+                        $('#patientName').text(patient.name);
+
+                        // Update visits table
+                        let visitsHtml = '';
+                        if (Array.isArray(patient.visits) && patient.visits.length > 0) {
+                            visitsHtml = patient.visits.map(visit => {
+                                return `
+                                    <tr>
+                                        <td>${visit.visit_date} ${visit.visit_time || ''}</td>
+                                        <td>${visit.doctor.name || 'Unknown Doctor'}</td>
+                                        <td>${visit.clinic.name || 'Unknown Clinic'}</td>
+                                    </tr>`;
+                            }).join('');
+                        } else {
+                            visitsHtml = '<tr><td colspan="3">No visits found</td></tr>';
+                        }
+                        $('#visitsTable tbody').html(visitsHtml);
+
+                        // Update appointments table
+                        let appointmentsHtml = '';
+                        if (Array.isArray(patient.appointments) && patient.appointments.length > 0) {
+                            appointmentsHtml = patient.appointments.map(appointment => {
+                                return `
+                                    <tr>
+                                        <td>${appointment.appointment_date} ${appointment.appointment_time || ''}</td>
+                                        <td>${appointment.doctor.name || 'Unknown Doctor'}</td>
+                                        <td>${appointment.status || 'N/A'}</td>
+                                    </tr>`;
+                            }).join('');
+                        } else {
+                            appointmentsHtml = '<tr><td colspan="3">No appointments found</td></tr>';
+                        }
+                        $('#appointmentsTable tbody').html(appointmentsHtml);
+                    },
+                    error: function (xhr, status, error) {
+                        console.error('Error fetching patient data:', error);
+                        console.error('Response Text:', xhr.responseText);
+                        $('#patientDetails').html(`<p style="color:red;">Error: ${xhr.responseText || error}</p>`);
+                    }
+                });
+            });
+        });
+
+        function returnToPatientPage() {
+            // Redirect to the patient page (change the URL to your actual patient page URL)
+            window.location.href = '/patients/';
+        }
+    </script>
+    
+</body>
+</html>
